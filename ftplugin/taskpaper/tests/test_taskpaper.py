@@ -26,6 +26,52 @@ class TestExtractTags(unittest.TestCase):
         self.assertEqual([None, "today", "123-abc-ef"], tvalues)
         self.assertEqual("Hello World", text)
 
+class _ParsingBase(unittest.TestCase):
+    text = None
+
+    def setUp(self):
+        self.tpf = TaskPaperFile(self.text)
+
+        self.assertEqual(self.text, str(self.tpf))
+
+class TestParsingSimple(_ParsingBase):
+    text = \
+"""One project:
+	This is a comment
+	which is continued on
+	- Task one
+		And a comment for Task one
+"""
+
+    def test_tree(self):
+        self.assertEqual(1, len(self.tpf.childs))
+        p = self.tpf.childs[0]
+
+        self.assertEqual("One project:", p.text)
+        self.assertEqual("Project", p.__class__.__name__)
+        self.assertEqual(3, len(p.childs))
+
+        self.assertEqual("This is a comment", p.childs[0].text)
+        self.assertEqual("CommentLine", p.childs[0].__class__.__name__)
+
+        self.assertEqual("which is continued on", p.childs[1].text)
+        self.assertEqual("CommentLine", p.childs[1].__class__.__name__)
+
+        self.assertEqual("- Task one", p.childs[2].text)
+        self.assertEqual("Task", p.childs[2].__class__.__name__)
+
+        t = p.childs[2]
+        self.assertEqual("- Task one", t.text)
+        self.assertEqual("Task", t.__class__.__name__)
+        self.assertEqual(1, len(t.childs))
+
+        self.assertEqual("And a comment for Task one", t.childs[0].text)
+        self.assertEqual("CommentLine", t.childs[0].__class__.__name__)
+
+
+
+
+
 if __name__ == '__main__':
    unittest.main()
    # k = SomeTestClass()
