@@ -21,6 +21,9 @@ setlocal foldmethod=syntax
 setlocal foldlevel=99
 setlocal nofoldenable
 
+" Disable wrapping
+set nowrap
+
 "show tasks from context under the cursor
 function! s:ShowContext()
     let s:wordUnderCursor = expand("<cword>")
@@ -103,3 +106,24 @@ map <buffer> <silent> <Leader>tx <Plug>ToggleCancelled
 map <buffer> <silent> <Leader>tc <Plug>ShowContext
 map <buffer> <silent> <Leader>ta <Plug>ShowAll
 map <buffer> <silent> <Leader>tp <Plug>FoldAllProjects
+
+"" Python Stuff below {{{
+"" Startup Code {{{
+
+" Expand our path
+python << EOF
+import vim, os, sys
+
+new_path = vim.eval('expand("<sfile>:h")')
+sys.path.append(new_path)
+
+from taskpaper import *
+EOF
+    " }}}
+
+augroup TaskpaperBufWritePre
+  au!
+  au BufWritePre *.taskpaper py reorder_tags()
+augroup END
+" }}}
+
