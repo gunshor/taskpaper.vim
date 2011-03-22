@@ -23,6 +23,8 @@ setlocal nofoldenable
 
 " Disable wrapping
 set nowrap
+set ts=4
+set sw=4
 
 "show tasks from context under the cursor
 function! s:ShowContext()
