@@ -143,7 +143,7 @@ def extract_timeline():
 
     projects = {}
     def _recurse(f):
-        if "@due" in f.tags:
+        if "@due" in f.tags and not '@done' in f.tags:
             dd = f.tags["@due"].value.split()[0]
             text = dt.date(*map(int,dd.split('-'))).strftime("%A, %d. %B %Y:")
             if today > dd:
@@ -159,6 +159,7 @@ def extract_timeline():
                 projects[dd] = p
 
             ad = copy(f)
+            ad._trailing_empty_lines = 0
             projects[dd].childs.append(ad)
             ad.parent = projects[dd]
 
