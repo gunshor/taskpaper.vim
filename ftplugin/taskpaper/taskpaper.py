@@ -7,7 +7,6 @@ except ImportError:
     pass
 
 import re
-import uuid
 
 class Tag(object):
     def __init__(self, name, value = None):
@@ -35,12 +34,8 @@ def reorder_tags():
     for l in vim.current.buffer:
         text, tags = extract_tags(l)
 
-        id = tags.pop("@uuid", Tag("@uuid", str(uuid.uuid4())))
         tag_order = sorted([t._name for t in tags.values() if not t._value]) + \
-                    sorted([t._name for t in tags.values() if t._value]) + \
-                    ['@uuid']
-        tags["@uuid"] = id
-
+                    sorted([t._name for t in tags.values() if t._value])
         result.append(' '.join((text,
             ' '.join(str(tags[n]) for n in tag_order)
         )))
