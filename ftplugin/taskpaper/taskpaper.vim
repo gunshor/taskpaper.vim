@@ -22,35 +22,15 @@ setlocal foldlevel=99
 setlocal nofoldenable
 
 " Disable wrapping
-set nowrap
-set ts=4
-set sw=4
+setlocal nowrap
 
-"show tasks from context under the cursor
-function! s:ShowContext()
-    let s:wordUnderCursor = expand("<cword>")
-    if(s:wordUnderCursor =~ "@\k*")
-        let @/ = "\\<".s:wordUnderCursor."\\>"
-        "adapted from http://vim.sourceforge.net/tips/tip.php?tip_id=282
-        setlocal foldexpr=(getline(v:lnum)=~@/)?0:1
-        setlocal foldmethod=expr foldlevel=0 foldcolumn=1 foldminlines=0
-        setlocal foldenable
-    else
-        echo "'" s:wordUnderCursor "' is not a context."    
-    endif
-endfunction
+" Add formatoptions
+setlocal formatoptions+=o
+setlocal formatoptions+=t
+setlocal comments=b:-
 
-function! s:ShowAll()
-    setlocal foldmethod=syntax
-    %foldopen!
-    setlocal nofoldenable
-endfunction  
-
-function! s:FoldAllProjects()
-    setlocal foldmethod=syntax
-    setlocal foldenable
-    %foldclose! 
-endfunction
+" Filtering
+setlocal errorformat=%l:%m
 
 " toggle @done context tag on a task
 function! s:ToggleDone()
@@ -99,15 +79,13 @@ endfunction
 " Set up mappings
 noremap <unique> <script> <Plug>ToggleDone       :call <SID>ToggleDone()<CR>
 noremap <unique> <script> <Plug>ToggleCancelled   :call <SID>ToggleCancelled()<CR>
-noremap <unique> <script> <Plug>ShowContext      :call <SID>ShowContext()<CR>
-noremap <unique> <script> <Plug>ShowAll          :call <SID>ShowAll()<CR>
-noremap <unique> <script> <Plug>FoldAllProjects  :call <SID>FoldAllProjects()<CR>
 
 map <buffer> <silent> <Leader>td <Plug>ToggleDone
 map <buffer> <silent> <Leader>tx <Plug>ToggleCancelled
-map <buffer> <silent> <Leader>tc <Plug>ShowContext
-map <buffer> <silent> <Leader>ta <Plug>ShowAll
-map <buffer> <silent> <Leader>tp <Plug>FoldAllProjects
+
+command -nargs=* Filter py filter_taskpaper(r'<args>')
+
+map <buffer> <silent> <Leader>tf :Filter 
 
 "" Python Stuff below {{{
 "" Startup Code {{{
@@ -125,7 +103,7 @@ EOF
 
 augroup TaskpaperBufWritePre
   au!
-  au BufWritePre *.taskpaper py reorder_tags()
+  au BufWritePre *.taskpaper py run_presave()
 augroup END
 " }}}
 
