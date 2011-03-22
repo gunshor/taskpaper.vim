@@ -134,17 +134,16 @@ class Tag(object):
 
 import os
 import datetime as dt
-from copy import deepcopy as copy
+from copy import copy
 
-def extract_timeline():
-    f = TaskPaperFile('\n'.join(vim.current.buffer))
+def extract_timeline(tpf):
     tl = TaskPaperFile("")
     today = dt.date.today().strftime("%Y-%m-%d")
 
     projects = {}
-    def _recurse(f):
-        if "@due" in f.tags and not '@done' in f.tags:
-            dd = f.tags["@due"].value.split()[0]
+    def _recurse(o):
+        if "@due" in o.tags and not '@done' in o.tags:
+            dd = o.tags["@due"].value.split()[0]
             text = dt.date(*map(int,dd.split('-'))).strftime("%A, %d. %B %Y:")
             if today > dd:
                 text = "Overdue:"
@@ -158,24 +157,22 @@ def extract_timeline():
                 p.due = dd
                 projects[dd] = p
 
-            ad = copy(f)
+            ad = copy(o)
             ad._trailing_empty_lines = 0
             projects[dd].childs.append(ad)
             ad.parent = projects[dd]
 
-        for c in f.childs:
+        for c in o.childs:
             _recurse(c)
 
-    _recurse(f)
+    _recurse(tpf)
 
     home = os.getenv("HOME")
     open("%s/SimpleText/timeline.taskpaper" % home, "w").write(
       '\n'.join(str(c) for c in sorted(tl.childs, key=lambda p: p.due))
     )
 
-def reorder_tags():
-    f = TaskPaperFile('\n'.join(vim.current.buffer))
-
+def reorder_tags(tpf):
     def _recurse(obj):
         tag_order = sorted([t.name for t in obj.tags.values() if not t.value]) + \
                     sorted([t.name for t in obj.tags.values() if t.value])
@@ -185,9 +182,7 @@ def reorder_tags():
         for c in obj.childs:
             _recurse(c)
 
-    _recurse(f)
-
-    vim.current.buffer[:] = str(f).splitlines()
+    _recurse(tpf)
 
 def filter_taskpaper(cmdline):
     f = TaskPaperFile('\n'.join(vim.current.buffer))
@@ -217,10 +212,10 @@ def filter_taskpaper(cmdline):
     )
     vim.command("lwindow")
 
-
-
 def run_presave():
-    reorder_tags()
-    extract_timeline()
+    tpf = TaskPaperFile('\n'.join(vim.current.buffer))
 
+    reorder_tags(tpf)
+    extract_timeline(tpf)
 
+    vim.current.buffer[:] = str(tpf).splitlines()
