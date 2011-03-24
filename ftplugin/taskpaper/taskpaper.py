@@ -9,6 +9,8 @@ except ImportError:
 import re
 import sys
 
+from config import TIMELINE_FILENAME
+
 from _ordered_dict import OrderedDict
 
 __TAGS = re.compile(r"\s*(@\w+)(\([^)]*\))?\s*")
@@ -132,23 +134,29 @@ class Tag(object):
         return self.name if not self.value else "%s(%s)" % \
                 (self.name, self.value)
 
-import os
 import datetime as dt
 from copy import copy
 
 def extract_timeline(tpf):
     tl = TaskPaperFile("")
-    today = dt.date.today().strftime("%Y-%m-%d")
+    today = dt.date.today()
+    today_str = today.strftime("%Y-%m-%d")
 
     projects = {}
     def _recurse(o):
         if "@due" in o.tags and not '@done' in o.tags:
             dd = o.tags["@due"].value.split()[0]
-            text = dt.date(*map(int,dd.split('-'))).strftime("%A, %d. %B %Y:")
-            if today > dd:
+            other_date = dt.date(*map(int,dd.split('-')))
+            diff_days = (other_date - today).days
+
+            text = "%s (+%i day%s)" % (
+                other_date.strftime("%A, %d. %B %Y:"),
+                diff_days, "s" if diff_days != 1 else ""
+            )
+            if today_str > dd:
                 text = "Overdue:"
                 dd = ".00_overdue"
-            if today == dd:
+            if today_str == dd:
                 text = "Today:"
                 dd = ".01_today"
 
@@ -167,8 +175,7 @@ def extract_timeline(tpf):
 
     _recurse(tpf)
 
-    home = os.getenv("HOME")
-    open("%s/SimpleText/timeline.taskpaper" % home, "w").write(
+    open(TIMELINE_FILENAME, "w").write(
       '\n'.join(str(c) for c in sorted(tl.childs, key=lambda p: p.due))
     )
 
