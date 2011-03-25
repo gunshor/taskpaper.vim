@@ -35,11 +35,12 @@ class TextItem(object):
 
         # Search the parent
         pparent = prev
-        while pparent.indent >= indent:
+        while pparent and pparent.indent >= indent:
             pparent = pparent.parent
         self.parent = pparent
 
-        self.parent.childs.append(self)
+        if self.parent:
+            self.parent.childs.append(self)
 
         self.indent = indent
         self.text = text
@@ -75,18 +76,14 @@ class TextItem(object):
         return s
 
 
-class TaskPaperFile(TextItem):
+class TaskPaperFile(object):
     __INDENT = re.compile("^(\t*)(.*)")
 
     def __init__(self, text):
-        self.text = None
         self.childs = []
-        self.indent = None
         self.tags = {}
 
-        self._trailing_empty_lines = 0
-
-        le = self
+        le = None
         for lidx,line in enumerate(text.splitlines()):
             if not len(line.strip()):
                 if le: le.append_trailing_empty_line()
@@ -106,7 +103,13 @@ class TaskPaperFile(TextItem):
 
             if not to.parent:
                 self.childs.append(to)
+
             le = to
+
+
+    def __str__(self):
+        return ''.join(str(c) for c in self.childs)
+
 
 
 class Project(TextItem):
@@ -149,8 +152,8 @@ def extract_timeline(tpf):
             other_date = dt.date(*map(int,dd.split('-')))
             diff_days = (other_date - today).days
 
-            text = "%s (+%i day%s)" % (
-                other_date.strftime("%A, %d. %B %Y:"),
+            text = "%s (+%i day%s):" % (
+                other_date.strftime("%A, %d. %B %Y"),
                 diff_days, "s" if diff_days != 1 else ""
             )
             if today_str > dd:
