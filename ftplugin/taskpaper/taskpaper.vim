@@ -27,7 +27,7 @@ setlocal nowrap
 " Add formatoptions
 setlocal formatoptions+=o
 setlocal formatoptions+=t
-setlocal comments=b:-
+setlocal comments=b:-,b:•
 
 " Filtering
 setlocal errorformat=%l:%m
