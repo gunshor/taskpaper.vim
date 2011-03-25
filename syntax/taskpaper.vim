@@ -19,10 +19,10 @@ endif
 syn case ignore
 
 syn match  taskpaperComment "^.*$"
-syn match  taskpaperProject       /^.\+:\s*$/
+syn match  taskpaperProject       /^.\+:\s*\(@[A-Za-z0-9_]\+\s*\)*$/ contains=taskpaperTag
 syn match  taskpaperLineContinue ".$" contained
 syn match  taskpaperListItem  "^\s*[-+]\s\+" 
-syn match  taskpaperContext  "@[A-Za-z0-9_]\+"
+syn match  taskpaperTag  "@[A-Za-z0-9_]\+"
 syn match  taskpaperDone "^\s*[-+]\s\+.*@[Dd]one.*$"
 syn match  taskpaperCancelled "^\s*[-+]\s\+.*@[Cc]ancelled.*$"
 
@@ -32,7 +32,7 @@ syn sync fromstart
 
 "highlighting for Taskpaper groups
 HiLink taskpaperListItem      Identifier
-HiLink taskpaperContext       Identifier
+HiLink taskpaperTag           Identifier
 HiLink taskpaperProject       Title
 HiLink taskpaperDone          NonText
 HiLink taskpaperCancelled     NonText
