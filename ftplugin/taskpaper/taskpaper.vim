@@ -103,7 +103,8 @@ EOF
 
 augroup TaskpaperBufWritePre
   au!
-  au BufWritePre *.taskpaper py run_presave()
+  au BufWritePre *.taskpaper silent py run_presave()
+  au BufWritePost *.taskpaper silent checktime
 augroup END
 " }}}
 
