@@ -164,7 +164,9 @@ def extract_timeline(tpf):
                 dd = ".01_today"
 
             if dd not in projects:
-                p = Project(0, text, tl, 0)
+                p = Project(0, text, None, 0)
+                tl.childs.append(p)
+
                 p.due = dd
                 projects[dd] = p
 
