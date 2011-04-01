@@ -18,6 +18,7 @@ class TestTag(unittest.TestCase):
         self.assertEqual("@done", str(self.t1))
         self.assertEqual("@due(2011-09-14)", str(self.t2))
 
+# Parsing of Tags  {{{
 class _DummyTextItem(TextItem):
     def __init__(self, text):
         self.text = text
@@ -25,7 +26,7 @@ class _DummyTextItem(TextItem):
 
         self._extract_tags()
 
-class TestExtractTags(unittest.TestCase):
+class TestParsingOfTags(unittest.TestCase):
     def test_simple(self):
         d = _DummyTextItem("Hello World @done @due(today) @uuid(123-abc-ef)")
         tnames = sorted(d.tags.keys())
@@ -49,6 +50,10 @@ class _ParsingBase(unittest.TestCase):
         self.tpf = TaskPaperFile(self.text)
 
         self.assertEqual(self.text, str(self.tpf))
+
+
+
+# End: Parsing of Tags  }}}
 
 class TestParsingSimple(_ParsingBase):
     text = \
