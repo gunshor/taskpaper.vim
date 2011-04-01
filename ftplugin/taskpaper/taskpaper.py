@@ -9,7 +9,7 @@ except ImportError:
 import re
 import sys
 
-from config import TIMELINE_FILENAME
+from config import *
 
 from _ordered_dict import OrderedDict
 
@@ -229,6 +229,8 @@ def run_presave():
     tpf = TaskPaperFile('\n'.join(vim.current.buffer))
 
     reorder_tags(tpf)
-    extract_timeline(tpf)
+
+    if vim.current.buffer.name == TODO_FILENAME:
+        extract_timeline(tpf)
 
     vim.current.buffer[:] = str(tpf).splitlines()
