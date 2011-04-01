@@ -117,12 +117,124 @@ class TestParsingWithTags(TestParsingSimple):
     def test_tags(self):
         p = self.tpf.childs[0]
         self.assertEqual(["@btag", "@atag", "@due"], p.tags.keys())
-        self.assertEqual(["@btag", "@atag", "@due"], [ t.name for t in p.tags.values()])
-        self.assertEqual([None, None, "2011-09-13"], [ t.value for t in p.tags.values()])
+        self.assertEqual(["@btag", "@atag", "@due"],
+            [t.name for t in p.tags.values()]
+        )
+        self.assertEqual([None, None, "2011-09-13"],
+            [t.value for t in p.tags.values()]
+        )
 
         self.assertEqual(0, len(p.childs[0].tags))
         self.assertEqual(0, len(p.childs[1].tags))
 
         self.assertEqual(1, len(p.childs[2].tags))
         self.assertEqual(1, len(p.childs[3].tags))
+
+
+# Reordering of Tasks  {{{
+class _ReorderingOfTagsBase(unittest.TestCase):
+    def setUp(self):
+        self.tpf = TaskPaperFile(self.text)
+        reorder_tags(self.tpf)
+
+    def runTest(self):
+        self.assertEqual(self.wanted, str(self.tpf))
+
+class TestTagReordering_simpleAlphabetical(_ReorderingOfTagsBase):
+    text = "- was the dishes @beta @House @z\n"
+    wanted = "- was the dishes @House @beta @z\n"
+class TestTagReordering_withDataAtEnd(_ReorderingOfTagsBase):
+    text = "- was the dishes @precision(1) @beta @House @z\n"
+    wanted = "- was the dishes @House @beta @z @precision(1)\n"
+class TestTagReordering_realWorldExample(_ReorderingOfTagsBase):
+    text = """Keep things in order: @home @alp
+	- One @due(today) @zshop @beta
+	- Two @beta @alpha @due(tomorrow)
+"""
+    wanted = """Keep things in order: @alp @home
+	- One @beta @zshop @due(today)
+	- Two @alpha @beta @due(tomorrow)
+"""
+
+
+# End: Reordering of Tasks  }}}
+
+# Timeline Tests  {{{
+class _CreateTimelineBase(unittest.TestCase):
+    def setUp(self):
+        self.tpf = TaskPaperFile(self.text)
+        self.timeline = extract_timeline(self.tpf, dt.date(2011, 04, 01))
+
+    def runTest(self):
+        self.assertEqual(self.wanted, str(self.timeline))
+
+class TestTimeline_NoDueItemsInTodoFile(_CreateTimelineBase):
+    text = "- This one has no due date @home"
+    wanted = "\n\n vim:ro"
+
+class TestTimeline_SimpleExample(_CreateTimelineBase):
+    text = """My cool Project:
+	- This was due @due(2011-03-20)
+	- This is due tomorrow @due(2011-04-02)
+
+My other cool Project:
+	- This is due today @due(2011-04-01)
+	- This is due in one month @due(2011-05-01)
+
+My third cool project:
+	- Nothing here
+"""
+    wanted = """Overdue:
+	- This was due @due(2011-03-20)
+
+Today:
+	- This is due today @due(2011-04-01)
+
+Saturday, 02. April 2011 (+1 day):
+	- This is due tomorrow @due(2011-04-02)
+
+Sunday, 01. May 2011 (+30 days):
+	- This is due in one month @due(2011-05-01)
+
+
+ vim:ro"""
+
+class TestTimeline_SimpleExampleWithDones(_CreateTimelineBase):
+    text = """My cool Project:
+	- This was due @due(2011-03-20)
+	- This is due tomorrow @due(2011-04-02) @done
+
+My other cool Project:
+	- This is due today @due(2011-04-01) @done
+	- This is due in one month @due(2011-05-01)
+
+
+My third cool project:
+	- Nothing here
+"""
+    wanted = """Overdue:
+	- This was due @due(2011-03-20)
+
+Sunday, 01. May 2011 (+30 days):
+	- This is due in one month @due(2011-05-01)
+
+
+ vim:ro"""
+
+class TestTimeline_OnlyIndentOnce(_CreateTimelineBase):
+    text = """My cool Project:
+	- This was due @due(2011-03-20)
+	My subproject:
+		- This is due today @due(2011-04-01)
+"""
+    wanted = """Overdue:
+	- This was due @due(2011-03-20)
+
+Today:
+	- This is due today @due(2011-04-01)
+
+
+ vim:ro"""
+
+# End: Timeline Tests  }}}
 

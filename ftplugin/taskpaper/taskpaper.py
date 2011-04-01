@@ -140,9 +140,9 @@ class Tag(object):
 import datetime as dt
 from copy import copy
 
-def extract_timeline(tpf):
+def extract_timeline(tpf, gtoday = None):
     tl = TaskPaperFile("")
-    today = dt.date.today()
+    today = dt.date.today() if not gtoday else gtoday
     today_str = today.strftime("%Y-%m-%d")
 
     projects = {}
@@ -172,6 +172,7 @@ def extract_timeline(tpf):
 
             ad = copy(o)
             ad._trailing_empty_lines = 0
+            ad.indent = 1
             projects[dd].childs.append(ad)
             ad.parent = projects[dd]
 
@@ -183,7 +184,7 @@ def extract_timeline(tpf):
     outstr = '\n'.join(str(c) for c in sorted(tl.childs, key=lambda p: p.due))
     outstr += '\n\n vim:ro'
 
-    open(TIMELINE_FILENAME, "w").write(outstr)
+    return outstr
 
 def reorder_tags(tpf):
     def _recurse(obj):
@@ -231,6 +232,6 @@ def run_presave():
     reorder_tags(tpf)
 
     if vim.current.buffer.name == TODO_FILENAME:
-        extract_timeline(tpf)
+        open(TIMELINE_FILENAME, "w").write(extract_timeline(tpf))
 
     vim.current.buffer[:] = str(tpf).splitlines()
