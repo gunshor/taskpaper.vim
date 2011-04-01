@@ -4,14 +4,6 @@
 " URL:		https://github.com/davidoc/taskpaper.vim
 " Last Change:  2011-02-15
 
-if exists("loaded_task_paper")
-    finish
-endif
-let loaded_task_paper = 1
-
-" Define a default date format
-if !exists('task_paper_date_format') | let task_paper_date_format = "%Y-%m-%d" | endif
-if !exists('task_paper_remap_cr') | let task_paper_remap_cr = 1 | endif
 
 "add '@' to keyword character set so that we can complete contexts as keywords
 setlocal iskeyword+=@-@
@@ -31,6 +23,25 @@ setlocal comments=b:-,b:•
 
 " Filtering
 setlocal errorformat=%l:%m
+
+map <buffer> <silent> <Leader>td <Plug>ToggleDone
+map <buffer> <silent> <Leader>tx <Plug>ToggleCancelled
+map <buffer> <silent> <Leader>tf :Filter 
+
+augroup TaskpaperBufWritePre
+  au!
+  au BufWritePre *.taskpaper silent py run_presave()
+  au BufWritePost *.taskpaper silent checktime
+augroup END
+
+if exists("loaded_task_paper")
+    finish
+endif
+let loaded_task_paper = 1
+
+" Define a default date format
+if !exists('task_paper_date_format') | let task_paper_date_format = "%Y-%m-%d" | endif
+if !exists('task_paper_remap_cr') | let task_paper_remap_cr = 1 | endif
 
 " toggle @done context tag on a task
 function! s:ToggleDone()
@@ -76,19 +87,14 @@ function! s:ToggleCancelled()
 
 endfunction
 
+command -nargs=* Filter py filter_taskpaper(r'<args>')
+
 " Set up mappings
 noremap <unique> <script> <Plug>ToggleDone       :call <SID>ToggleDone()<CR>
 noremap <unique> <script> <Plug>ToggleCancelled   :call <SID>ToggleCancelled()<CR>
 
-map <buffer> <silent> <Leader>td <Plug>ToggleDone
-map <buffer> <silent> <Leader>tx <Plug>ToggleCancelled
-
-command -nargs=* Filter py filter_taskpaper(r'<args>')
-
-map <buffer> <silent> <Leader>tf :Filter 
 
 "" Python Stuff below {{{
-"" Startup Code {{{
 
 " Expand our path
 python << EOF
@@ -99,12 +105,5 @@ sys.path.append(new_path)
 
 from taskpaper import *
 EOF
-    " }}}
-
-augroup TaskpaperBufWritePre
-  au!
-  au BufWritePre *.taskpaper silent py run_presave()
-  au BufWritePost *.taskpaper silent checktime
-augroup END
 " }}}
 
