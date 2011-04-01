@@ -182,7 +182,7 @@ def extract_timeline(tpf, gtoday = None):
     _recurse(tpf)
 
     outstr = '\n'.join(str(c) for c in sorted(tl.childs, key=lambda p: p.due))
-    outstr += '\n\n vim:ro'
+    outstr += '\n\n vim:ro\n'
 
     return outstr
 

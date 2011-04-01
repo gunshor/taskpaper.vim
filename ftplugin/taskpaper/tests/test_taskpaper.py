@@ -175,7 +175,7 @@ class _CreateTimelineBase(unittest.TestCase):
 
 class TestTimeline_NoDueItemsInTodoFile(_CreateTimelineBase):
     text = "- This one has no due date @home"
-    wanted = "\n\n vim:ro"
+    wanted = "\n\n vim:ro\n"
 
 class TestTimeline_SimpleExample(_CreateTimelineBase):
     text = """My cool Project:
@@ -202,7 +202,7 @@ Sunday, 01. May 2011 (+30 days):
 	- This is due in one month @due(2011-05-01)
 
 
- vim:ro"""
+ vim:ro\n"""
 
 class TestTimeline_SimpleExampleWithDones(_CreateTimelineBase):
     text = """My cool Project:
@@ -224,7 +224,7 @@ Sunday, 01. May 2011 (+30 days):
 	- This is due in one month @due(2011-05-01)
 
 
- vim:ro"""
+ vim:ro\n"""
 
 class TestTimeline_OnlyIndentOnce(_CreateTimelineBase):
     text = """My cool Project:
@@ -239,7 +239,7 @@ Today:
 	- This is due today @due(2011-04-01)
 
 
- vim:ro"""
+ vim:ro\n"""
 
 # End: Timeline Tests  }}}
 
