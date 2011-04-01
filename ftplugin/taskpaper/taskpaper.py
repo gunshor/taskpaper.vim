@@ -180,9 +180,10 @@ def extract_timeline(tpf):
 
     _recurse(tpf)
 
-    open(TIMELINE_FILENAME, "w").write(
-      '\n'.join(str(c) for c in sorted(tl.childs, key=lambda p: p.due))
-    )
+    outstr = '\n'.join(str(c) for c in sorted(tl.childs, key=lambda p: p.due))
+    outstr += '\n\n vim:ro'
+
+    open(TIMELINE_FILENAME, "w").write(outstr)
 
 def reorder_tags(tpf):
     def _recurse(obj):
