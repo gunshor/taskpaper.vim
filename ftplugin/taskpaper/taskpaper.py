@@ -235,3 +235,28 @@ def run_presave():
         open(TIMELINE_FILENAME, "w").write(extract_timeline(tpf))
 
     vim.current.buffer[:] = str(tpf).splitlines()
+
+
+if __name__ == '__main__':
+    from optparse import OptionParser
+
+    def parse_args():
+        parser = OptionParser("%prog [options] <input file>")
+        parser.add_option("-t", "--timeline", action="store_true",
+                default=False, help="create a timeline", metavar="FILE")
+
+        o, a = parser.parse_args()
+
+        if not len(a):
+            parser.error("Need at least the input file!")
+
+        return o,a
+
+    def main():
+        o, a = parse_args()
+
+        if o.timeline:
+            tpf = TaskPaperFile(open(a[0]).read())
+            sys.stdout.write(extract_timeline(tpf))
+
+    main()
