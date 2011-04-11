@@ -108,12 +108,10 @@ class TaskPaperFile(object):
 
     def at_line(self, lineno):
         def _recurse(p):
-            print "p: %s, p.lineno: %s" % (p.text, p.lineno)
             if p.lineno == lineno:
                 return p
 
             for c in p.childs:
-                print "c.text: %s, c.lineno: %s" % (c.text, c.lineno)
                 k = _recurse(c)
                 if k is not None: return k
 

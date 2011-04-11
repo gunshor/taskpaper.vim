@@ -24,8 +24,7 @@ setlocal comments=b:-,b:•
 " Filtering
 setlocal errorformat=%l:%m
 
-map <buffer> <silent> <Leader>td <Plug>ToggleDone
-map <buffer> <silent> <Leader>tx <Plug>ToggleCancelled
+map <buffer> <silent> <Leader>td :ToggleDone<cr>
 map <buffer> <silent> <Leader>tf :Filter 
 map <buffer> <silent> <C-a> :AddToDate<cr>
 map <buffer> <silent> <C-x> :SubFromDate<cr>
@@ -42,56 +41,14 @@ endif
 let loaded_task_paper = 1
 
 " Define a default date format
+" TODO: remove those two lines and appearances
 if !exists('task_paper_date_format') | let task_paper_date_format = "%Y-%m-%d" | endif
 if !exists('task_paper_remap_cr') | let task_paper_remap_cr = 1 | endif
-
-" toggle @done context tag on a task
-function! s:ToggleDone()
-
-    let line = getline(".")
-    if (line =~ '^\s*- ')
-        let repl = line
-        if (line =~ '@done')
-            let repl = substitute(line, "@done\(.*\)", "", "g")
-            echo "undone!"
-        else
-            let today = strftime(g:task_paper_date_format, localtime())
-            let done_str = " @done(" . today . ")"
-            let repl = substitute(line, "$", done_str, "g")
-            echo "done!"
-        endif
-        call setline(".", repl)
-    else 
-        echo "not a task."
-    endif
-
-endfunction
-
-" toggle @cancelled context tag on a task
-function! s:ToggleCancelled()
-
-    let line = getline(".")
-    if (line =~ '^\s*- ')
-        let repl = line
-        if (line =~ '@cancelled')
-            let repl = substitute(line, "@cancelled\(.*\)", "", "g")
-            echo "uncancelled!"
-        else
-            let today = strftime(g:task_paper_date_format, localtime())
-            let cancelled_str = " @cancelled(" . today . ")"
-            let repl = substitute(line, "$", cancelled_str, "g")
-            echo "cancelled!"
-        endif
-        call setline(".", repl)
-    else 
-        echo "not a task."
-    endif
-
-endfunction
 
 command -nargs=* Filter py filter_taskpaper(r'<args>')
 command -count AddToDate py add_to_date(<count>, 1)
 command -count SubFromDate py add_to_date(<count>, -1)
+command -range ToggleDone py toggle_done(<count>)
 
 " Set up mappings
 noremap <unique> <script> <Plug>ToggleDone       :call <SID>ToggleDone()<CR>
