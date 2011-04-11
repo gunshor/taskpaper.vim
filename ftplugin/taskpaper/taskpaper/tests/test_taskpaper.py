@@ -43,17 +43,18 @@ class TestParsingOfTags(unittest.TestCase):
         d = _DummyTextItem("Blah @ka2wi @andAnother")
         self.assertEqual(["@ka2wi", "@andAnother"], d.tags.keys())
 
+
+# End: Parsing of Tags  }}}
+
 class _ParsingBase(unittest.TestCase):
     text = None
 
     def setUp(self):
         self.tpf = TaskPaperFile(self.text)
 
+
+    def test_text_does_not_change(self):
         self.assertEqual(self.text, str(self.tpf))
-
-
-
-# End: Parsing of Tags  }}}
 
 class TestParsingSimple(_ParsingBase):
     text = \
@@ -92,7 +93,6 @@ class TestParsingSimple(_ParsingBase):
 
         self.assertEqual("And a comment for Task one", t.childs[0].text)
         self.assertEqual("CommentLine", t.childs[0].__class__.__name__)
-
 
 class TestParsingWithEmptyLines(TestParsingSimple):
     text = \
@@ -163,6 +163,41 @@ class TestTagReordering_realWorldExample(_ReorderingOfTagsBase):
 
 
 # End: Reordering of Tasks  }}}
+
+# LineNo Access  {{{
+
+class TestAccessByLineNumbers(_ParsingBase):
+    text = \
+"""One Project:
+	A comment
+	Another
+	- A Task
+
+	- Another
+	A subproject:
+			This is some written text
+		- And one more task
+"""
+
+    def test_project(self):
+        self.assertEqual("One Project:", self.tpf.at_line(1).text)
+
+    def test_subproject(self):
+        self.assertEqual("A subproject:", self.tpf.at_line(7).text)
+
+    def test_task(self):
+        self.assertEqual("- And one more task", self.tpf.at_line(9).text)
+
+    def test_comment_1(self):
+        self.assertEqual("A comment", self.tpf.at_line(2).text)
+    def test_comment_2(self):
+        self.assertEqual("Another", self.tpf.at_line(3).text)
+    def test_comment_3(self):
+        self.assertEqual("This is some written text", self.tpf.at_line(8).text)
+
+
+
+# End: LineNo Access  }}}
 
 # Timeline Tests  {{{
 class _CreateTimelineBase(unittest.TestCase):
