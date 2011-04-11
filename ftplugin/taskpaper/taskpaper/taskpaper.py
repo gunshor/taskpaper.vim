@@ -147,38 +147,38 @@ def extract_timeline(tpf, gtoday = None):
 
     projects = {}
     def _recurse(o):
-	try:
-		if "@due" in o.tags and not '@done' in o.tags:
-		    dd = o.tags["@due"].value.split()[0]
-		    other_date = str2date(dd)
-		    diff_days = (other_date - today).days
+        try:
+            if "@due" in o.tags and not '@done' in o.tags:
+                dd = o.tags["@due"].value.split()[0]
+                other_date = str2date(dd)
+                diff_days = (other_date - today).days
 
-		    text = "%s (+%i day%s):" % (
-			other_date.strftime("%A, %d. %B %Y"),
-			diff_days, "s" if diff_days != 1 else ""
-		    )
-		    if today_str > dd:
-			text = "Overdue:"
-			dd = ".00_overdue"
-		    if today_str == dd:
-			text = "Today:"
-			dd = ".01_today"
+                text = "%s (+%i day%s):" % (
+                    other_date.strftime("%A, %d. %B %Y"),
+                    diff_days, "s" if diff_days != 1 else ""
+                )
+                if today_str > dd:
+                    text = "Overdue:"
+                    dd = ".00_overdue"
+                if today_str == dd:
+                    text = "Today:"
+                    dd = ".01_today"
 
-		    if dd not in projects:
-			p = Project(0, text, None, 0)
-			tl.childs.append(p)
+                if dd not in projects:
+                    p = Project(0, text, None, 0)
+                    tl.childs.append(p)
 
-			p.due = dd
-			projects[dd] = p
+                    p.due = dd
+                    projects[dd] = p
 
-		    ad = copy(o)
-		    ad._trailing_empty_lines = 0
-		    ad.indent = 1
-		    projects[dd].childs.append(ad)
-		    ad.parent = projects[dd]
-	except Exception, e:
-		raise RuntimeError("%s\n\nError in todo file in line %i: %s!" %
-			(str(e), o.lineno, o.text))
+                ad = copy(o)
+                ad._trailing_empty_lines = 0
+                ad.indent = 1
+                projects[dd].childs.append(ad)
+                ad.parent = projects[dd]
+        except Exception, e:
+                raise RuntimeError("%s\n\nError in todo file in line %i: %s!" %
+                        (str(e), o.lineno, o.text))
 
         for c in o.childs:
             _recurse(c)
