@@ -27,6 +27,8 @@ setlocal errorformat=%l:%m
 map <buffer> <silent> <Leader>td <Plug>ToggleDone
 map <buffer> <silent> <Leader>tx <Plug>ToggleCancelled
 map <buffer> <silent> <Leader>tf :Filter 
+map <buffer> <silent> <C-a> :AddToDate<cr>
+map <buffer> <silent> <C-x> :SubFromDate<cr>
 
 augroup TaskpaperBufWritePre
   au!
@@ -88,6 +90,8 @@ function! s:ToggleCancelled()
 endfunction
 
 command -nargs=* Filter py filter_taskpaper(r'<args>')
+command -count AddToDate py add_to_date(<count>, 1)
+command -count SubFromDate py add_to_date(<count>, -1)
 
 " Set up mappings
 noremap <unique> <script> <Plug>ToggleDone       :call <SID>ToggleDone()<CR>
@@ -104,6 +108,7 @@ new_path = vim.eval('expand("<sfile>:h")')
 sys.path.append(new_path)
 
 from taskpaper import *
+from taskpaper.vim_utils import *
 EOF
 " }}}
 

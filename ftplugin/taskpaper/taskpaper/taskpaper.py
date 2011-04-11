@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-try:
-    import vim
-except ImportError:
-    pass
+try: import vim
+except ImportError: pass
 
 import re
 import sys
@@ -26,7 +24,6 @@ def _extract_tags(text):
     new_text = __TAGS.subn(_found, text)[0]
 
     return new_text, tags
-
 
 class TextItem(object):
     def __init__(self, indent, text, prev, lineno):
@@ -140,16 +137,19 @@ class Tag(object):
 import datetime as dt
 from copy import copy
 
+str2date = lambda sdate: dt.date(*map(int,sdate.split('-')))
+date2str = lambda date: date.strftime("%Y-%m-%d")
+
 def extract_timeline(tpf, gtoday = None):
     tl = TaskPaperFile("")
     today = dt.date.today() if not gtoday else gtoday
-    today_str = today.strftime("%Y-%m-%d")
+    today_str = date2str(today)
 
     projects = {}
     def _recurse(o):
         if "@due" in o.tags and not '@done' in o.tags:
             dd = o.tags["@due"].value.split()[0]
-            other_date = dt.date(*map(int,dd.split('-')))
+            other_date = str2date(dd)
             diff_days = (other_date - today).days
 
             text = "%s (+%i day%s):" % (
