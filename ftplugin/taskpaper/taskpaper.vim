@@ -40,11 +40,6 @@ if exists("loaded_task_paper")
 endif
 let loaded_task_paper = 1
 
-" Define a default date format
-" TODO: remove those two lines and appearances
-if !exists('task_paper_date_format') | let task_paper_date_format = "%Y-%m-%d" | endif
-if !exists('task_paper_remap_cr') | let task_paper_remap_cr = 1 | endif
-
 command -nargs=* Filter py filter_taskpaper(r'<args>')
 command -count AddToDate py add_to_date(<count>, 1)
 command -count SubFromDate py add_to_date(<count>, -1)
