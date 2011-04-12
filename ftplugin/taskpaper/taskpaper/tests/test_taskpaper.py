@@ -8,7 +8,10 @@ sys.path.append(os.path.dirname(__file__) + os.path.sep + '..')
 
 from taskpaper import *
 
-
+########
+# Tags #
+########
+# Tag class  {{{
 class TestTag(unittest.TestCase):
     def setUp(self):
         self.t1 = Tag("@done")
@@ -17,7 +20,7 @@ class TestTag(unittest.TestCase):
     def test_str(self):
         self.assertEqual("@done", str(self.t1))
         self.assertEqual("@due(2011-09-14)", str(self.t2))
-
+# End: Tag class  }}}
 # Parsing of Tags  {{{
 class _DummyTextItem(TextItem):
     def __init__(self, text):
@@ -46,17 +49,22 @@ class TestParsingOfTags(unittest.TestCase):
 
 # End: Parsing of Tags  }}}
 
-class _ParsingBase(unittest.TestCase):
+#####################################
+# Tests on Complete File (Read Only) #
+#####################################
+# TaskPaper File Tests Base Classes  {{{
+class _TPFBaseTest(unittest.TestCase):
     text = None
 
     def setUp(self):
         self.tpf = TaskPaperFile(self.text)
-
-
+class _ReadOnlyTPFBaseTest(_TPFBaseTest):
     def test_text_does_not_change(self):
         self.assertEqual(self.text, str(self.tpf))
+# End: TaskPaper File Tests Base Classes  }}}
+# Parsing Tests  {{{
 
-class TestParsingSimple(_ParsingBase):
+class TestParsingSimple(_ReadOnlyTPFBaseTest):
     text = \
 """One project:
 	This is a comment
@@ -134,39 +142,9 @@ class TestParsingWithTags(TestParsingSimple):
 
         self.assertEqual(1, len(p.childs[2].tags))
         self.assertEqual(1, len(p.childs[3].tags))
-
-
-# Reordering of Tasks  {{{
-class _ReorderingOfTagsBase(unittest.TestCase):
-    def setUp(self):
-        self.tpf = TaskPaperFile(self.text)
-        reorder_tags(self.tpf)
-
-    def runTest(self):
-        self.assertEqual(self.wanted, str(self.tpf))
-
-class TestTagReordering_simpleAlphabetical(_ReorderingOfTagsBase):
-    text = "- was the dishes @beta @House @z\n"
-    wanted = "- was the dishes @House @beta @z\n"
-class TestTagReordering_withDataAtEnd(_ReorderingOfTagsBase):
-    text = "- was the dishes @precision(1) @beta @House @z\n"
-    wanted = "- was the dishes @House @beta @z @precision(1)\n"
-class TestTagReordering_realWorldExample(_ReorderingOfTagsBase):
-    text = """Keep things in order: @home @alp
-	- One @due(today) @zshop @beta
-	- Two @beta @alpha @due(tomorrow)
-"""
-    wanted = """Keep things in order: @alp @home
-	- One @beta @zshop @due(today)
-	- Two @alpha @beta @due(tomorrow)
-"""
-
-
-# End: Reordering of Tasks  }}}
-
-# LineNo Access  {{{
-
-class TestAccessByLineNumbers(_ParsingBase):
+# End: Parsing Tests  }}}
+# Access Elements by Line Numbers  {{{
+class TestAccessByLineNumbers(_ReadOnlyTPFBaseTest):
     text = \
 """One Project:
 	A comment
@@ -197,8 +175,7 @@ class TestAccessByLineNumbers(_ParsingBase):
 
 
 
-# End: LineNo Access  }}}
-
+# End: Access Element by Line Numbers }}}
 # Timeline Tests  {{{
 class _CreateTimelineBase(unittest.TestCase):
     def setUp(self):
@@ -277,4 +254,31 @@ Today:
  vim:ro\n"""
 
 # End: Timeline Tests  }}}
+
+#######################################
+# Tests on Complete File (Read Write) #
+#######################################
+# Reordering of Tags  {{{
+class _ReorderingOfTagsBase(_TPFBaseTest):
+    def runTest(self):
+        reorder_tags(self.tpf)
+        self.assertEqual(self.wanted, str(self.tpf))
+
+class TestTagReordering_simpleAlphabetical(_ReorderingOfTagsBase):
+    text = "- was the dishes @beta @House @z\n"
+    wanted = "- was the dishes @House @beta @z\n"
+class TestTagReordering_withDataAtEnd(_ReorderingOfTagsBase):
+    text = "- was the dishes @precision(1) @beta @House @z\n"
+    wanted = "- was the dishes @House @beta @z @precision(1)\n"
+class TestTagReordering_realWorldExample(_ReorderingOfTagsBase):
+    text = """Keep things in order: @home @alp
+	- One @due(today) @zshop @beta
+	- Two @beta @alpha @due(tomorrow)
+"""
+    wanted = """Keep things in order: @alp @home
+	- One @beta @zshop @due(today)
+	- Two @alpha @beta @due(tomorrow)
+"""
+# End: Reordering of Tags  }}}
+
 
