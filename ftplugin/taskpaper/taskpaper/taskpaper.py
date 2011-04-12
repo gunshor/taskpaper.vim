@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import re
-from collections import defauldict
+from collections import defaultdict
 import sys
 
 try: import vim
@@ -68,6 +68,22 @@ class TextItem(object):
             yield c
 
     @property
+    def prev(self):
+        if self.parent:
+            idx = self.parent.childs.index(self)
+            if idx == 0: return self.parent
+            return self.parent.childs[idx-1]
+
+    def delete(self):
+        if self.prev:
+            self.prev._trailing_empty_lines += self._trailing_empty_lines
+        if self.parent:
+            self.parent.childs.remove(self)
+
+        self._trailing_empty_lines = 0
+        self.parent = None
+
+    @property
     def text_with_tags(self):
         s = self.text or ""
         if len(self.tags):
@@ -97,10 +113,7 @@ class TaskPaperFile(TextItem):
     __INDENT = re.compile("^(\t*)(.*)")
 
     def __init__(self, text):
-        self.childs = []
-        self.tags = {}
-        self.text = None
-        self.lineno = None
+        TextItem.__init__(self, None, None, None, None)
 
         le = None
         for lidx,line in enumerate(text.splitlines()):
@@ -122,11 +135,9 @@ class TaskPaperFile(TextItem):
 
             if not to.parent:
                 self.childs.append(to)
+                to.parent = self
 
             le = to
-
-    def __str__(self):
-        return ''.join(str(c) for c in self.childs)
 
     def at_line(self, lineno):
         if lineno <= 0:
@@ -161,6 +172,7 @@ class Tag(object):
                 (self.name, self.value)
 
 import datetime as dt
+import dateutil
 from copy import copy
 
 str2date = lambda sdate: dt.date(*map(int,sdate.split('-')))
@@ -219,13 +231,19 @@ def log_finished(tpf, logbook, gtoday = None):
 
     # Important, we remove elements from the TPF, so we have to make a lists of
     # them first, otherwise the tree changes while traversing
-    done_items = defauldict(list)
+    done_items = defaultdict(list)
     for e in list(new_tpf):
         if isinstance(e, (Task, Project)) and '@done' in e.tags:
-            e.delete() # TODO: unittests for delete!
             done_date = str2date(e.tags['@done'].value) if \
-                    e.tags['done'].value else today
+                    e.tags['@done'].value else today
             done_items[done_date].append(e)
+            parents = []
+            p = e.parent
+            while isinstance(p, (Project, Task)):
+                parents.append(p.text[:-1]) # strip ':'
+                p = p.parent
+            e.text = '- ' + ' • '.join(parents[::-1] + [e.text[2:]]) # strip '- '
+            e.delete()
 
     for date in sorted(done_items.keys(), reverse=True):
         proj_name = date.strftime("%A, %d. %B %Y:")
@@ -236,8 +254,17 @@ def log_finished(tpf, logbook, gtoday = None):
             proj = Project(0, proj_name, None, 1)
             new_logbook.childs.insert(0, proj)
 
-        # TODO: hier gehts weiter
+        for task in done_items[date]:
+            proj.childs.append(task)
+            task.parent = proj
 
+    new_logbook.childs.sort(
+        key=lambda a: dt.datetime.strptime(a.text, "%A, %d. %B %Y:").date(),
+        reverse=True,
+    )
+    for c in new_logbook: c._trailing_empty_lines = 0
+
+    return new_tpf, TaskPaperFile('\n'.join(str(c) for c in new_logbook.childs))
 
 
 def reorder_tags(tpf):

@@ -8,7 +8,7 @@ sys.path.append(os.path.dirname(__file__) + os.path.sep + '..')
 
 from taskpaper import *
 
-from nose.tools import raises, eq_, ok_
+from nose.tools import raises, ok_, eq_
 
 ########
 # Tags #
@@ -334,10 +334,11 @@ class _CreateLogbookBase(_TPFBaseTest):
         self.logbook = TaskPaperFile(self.logbook_text)
 
     def runTest(self):
-        new_tpf, new_logbook = log_finished(self.tpf, self.logbook)
+        new_tpf, new_logbook = log_finished(
+            self.tpf, self.logbook, dt.date(2011, 04, 03)
+        )
         eq_(self.wanted, str(new_tpf))
         eq_(self.wanted_logbook, str(new_logbook))
-# End: Logbook Tests  }}}
 
 class TestLogBook_SimpleExample_NoDate(_CreateLogbookBase):
     text = \
@@ -352,14 +353,63 @@ class TestLogBook_SimpleExample_NoDate(_CreateLogbookBase):
 	- This ain't either
 """
     logbook_text = \
-"""Without Date:
+"""Friday, 01. April 2011:
 	- This was already done @home @what
 """
     wanted_logbook = \
-"""Without Date:
-	- This was already done @home @what
+"""Sunday, 03. April 2011:
 	- My Project • This task is over @done @home
+
+Friday, 01. April 2011:
+	- This was already done @home @what
 """
+
+class TestLogBook_SimpleExample_WithDate(_CreateLogbookBase):
+    text = \
+"""My Project:
+	- This ain't
+	- This task is over @done(2011-05-12) @blah
+	- This task also @home @done(2011-03-30)
+
+My Other Project:
+	- Nothing is done for this
+"""
+    wanted = \
+"""My Project:
+	- This ain't
+
+My Other Project:
+	- Nothing is done for this
+"""
+    logbook_text = \
+"""Thursday, 12. May 2011:
+	- Long, Long done @done
+
+Tuesday, 12. April 2011:
+	- This is good
+
+Tuesday, 01. March 2011:
+	- This was already done @home @what
+"""
+    wanted_logbook = \
+"""Thursday, 12. May 2011:
+	- Long, Long done @done
+	- My Project • This task is over @done(2011-05-12) @blah
+
+Tuesday, 12. April 2011:
+	- This is good
+
+Wednesday, 30. March 2011:
+	- My Project • This task also @home @done(2011-03-30)
+
+Tuesday, 01. March 2011:
+	- This was already done @home @what
+"""
+
+# TODO: subproject logging
+# TODO: logging items with notes
+
+# End: Logbook Tests  }}}
 
 
 
