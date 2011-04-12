@@ -152,15 +152,28 @@ class Project(TextItem):
 
         self._extract_tags()
 
+    @property
+    def text_without_markers(self):
+        return self.text.rstrip()[:-1]
+
+
 class Task(TextItem):
     def __init__(self, *args):
         TextItem.__init__(self, *args)
 
         self._extract_tags()
 
+    @property
+    def text_without_markers(self):
+        return self.text.lstrip()[2:]
+
 class CommentLine(TextItem):
     def __init__(self, *args):
         TextItem.__init__(self, *args)
+
+    @property
+    def text_without_markers(self):
+        return self.text
 
 class Tag(object):
     def __init__(self, name, value = None):
@@ -240,9 +253,15 @@ def log_finished(tpf, logbook, gtoday = None):
             parents = []
             p = e.parent
             while isinstance(p, (Project, Task)):
-                parents.append(p.text[:-1]) # strip ':'
+                parents.append(p.text_without_markers)
                 p = p.parent
-            e.text = '- ' + ' • '.join(parents[::-1] + [e.text[2:]]) # strip '- '
+            e.text = ' • '.join(parents[::-1] + [e.text_without_markers])
+            if isinstance(e, Task):
+                e.text = "- " + e.text
+            else:
+                e.text += ":"
+            indent_diff = 1 - e.indent
+            for c in e: c.indent += indent_diff
             e.delete()
 
     for date in sorted(done_items.keys(), reverse=True):

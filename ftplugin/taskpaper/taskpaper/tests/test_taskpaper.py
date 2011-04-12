@@ -406,7 +406,82 @@ Tuesday, 01. March 2011:
 	- This was already done @home @what
 """
 
-# TODO: subproject logging
+class TestLogBook_SubProjectLogging_SPNotDone(_CreateLogbookBase):
+    text = \
+"""My Project:
+	- This is not done
+	- But this is @done(2011-05-12)
+	This is a subproject:
+		- All @done(2011-05-11)
+		- tasks @done(2011-05-11)
+		- are @done(2011-05-12)
+		- done @done(2011-05-12)
+
+	- This is also not done
+
+My Other Project:
+	- Nothing is done for this
+"""
+    wanted = \
+"""My Project:
+	- This is not done
+	This is a subproject:
+
+	- This is also not done
+
+My Other Project:
+	- Nothing is done for this
+"""
+    logbook_text = ""
+    wanted_logbook = \
+"""Thursday, 12. May 2011:
+	- My Project • But this is @done(2011-05-12)
+	- My Project • This is a subproject • are @done(2011-05-12)
+	- My Project • This is a subproject • done @done(2011-05-12)
+
+Wednesday, 11. May 2011:
+	- My Project • This is a subproject • All @done(2011-05-11)
+	- My Project • This is a subproject • tasks @done(2011-05-11)
+"""
+
+
+class TestLogBook_SubProjectLogging_SPIsDone(_CreateLogbookBase):
+    text = \
+"""My Project:
+	- This is not done
+	- But this is @done(2011-05-12)
+	This is a subproject: @done(2011-05-11)
+		- All @done(2011-05-11)
+		- tasks
+		- are
+		- done @done(2011-05-12)
+
+	- This is also not done
+
+My Other Project:
+	- Nothing is done for this
+"""
+# TODO: There should be a newline after This is not done
+    wanted = \
+"""My Project:
+	- This is not done
+	- This is also not done
+
+My Other Project:
+	- Nothing is done for this
+"""
+    logbook_text = ""
+    wanted_logbook = \
+"""Thursday, 12. May 2011:
+	- My Project • But this is @done(2011-05-12)
+	- My Project • This is a subproject • done @done(2011-05-12)
+
+Wednesday, 11. May 2011:
+	My Project • This is a subproject: @done(2011-05-11)
+		- tasks
+		- are
+	- My Project • This is a subproject • All @done(2011-05-11)
+"""
 # TODO: logging items with notes
 
 # End: Logbook Tests  }}}
