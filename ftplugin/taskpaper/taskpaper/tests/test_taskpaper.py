@@ -8,6 +8,8 @@ sys.path.append(os.path.dirname(__file__) + os.path.sep + '..')
 
 from taskpaper import *
 
+from nose.tools import raises, eq_, ok_
+
 ########
 # Tags #
 ########
@@ -18,8 +20,8 @@ class TestTag(unittest.TestCase):
         self.t2 = Tag("@due", "2011-09-14")
 
     def test_str(self):
-        self.assertEqual("@done", str(self.t1))
-        self.assertEqual("@due(2011-09-14)", str(self.t2))
+        eq_("@done", str(self.t1))
+        eq_("@due(2011-09-14)", str(self.t2))
 # End: Tag class  }}}
 # Parsing of Tags  {{{
 class _DummyTextItem(TextItem):
@@ -34,17 +36,17 @@ class TestParsingOfTags(unittest.TestCase):
         d = _DummyTextItem("Hello World @done @due(today) @uuid(123-abc-ef)")
         tnames = sorted(d.tags.keys())
         tvalues = [d.tags[n].value for n in tnames]
-        self.assertEqual(["@done", "@due", "@uuid"], tnames)
-        self.assertEqual([None, "today", "123-abc-ef"], tvalues)
-        self.assertEqual("Hello World", d.text)
+        eq_(["@done", "@due", "@uuid"], tnames)
+        eq_([None, "today", "123-abc-ef"], tvalues)
+        eq_("Hello World", d.text)
 
     def test_with_paren(self):
         d = _DummyTextItem("(@done and not @work) or @home")
-        self.assertEqual(["@done", "@work", "@home"], d.tags.keys())
+        eq_(["@done", "@work", "@home"], d.tags.keys())
 
     def test_with_numbers(self):
         d = _DummyTextItem("Blah @ka2wi @andAnother")
-        self.assertEqual(["@ka2wi", "@andAnother"], d.tags.keys())
+        eq_(["@ka2wi", "@andAnother"], d.tags.keys())
 
 
 # End: Parsing of Tags  }}}
@@ -60,7 +62,7 @@ class _TPFBaseTest(unittest.TestCase):
         self.tpf = TaskPaperFile(self.text)
 class _ReadOnlyTPFBaseTest(_TPFBaseTest):
     def test_text_does_not_change(self):
-        self.assertEqual(self.text, str(self.tpf))
+        eq_(self.text, str(self.tpf))
 # End: TaskPaper File Tests Base Classes  }}}
 # Parsing Tests  {{{
 
@@ -75,32 +77,32 @@ class TestParsingSimple(_ReadOnlyTPFBaseTest):
 """
 
     def test_tree(self):
-        self.assertEqual(1, len(self.tpf.childs))
+        eq_(1, len(self.tpf.childs))
         p = self.tpf.childs[0]
 
-        self.assertEqual("One project:", p.text)
-        self.assertEqual("Project", p.__class__.__name__)
-        self.assertEqual(4, len(p.childs))
+        eq_("One project:", p.text)
+        eq_("Project", p.__class__.__name__)
+        eq_(4, len(p.childs))
 
-        self.assertEqual("This is a comment", p.childs[0].text)
-        self.assertEqual("CommentLine", p.childs[0].__class__.__name__)
+        eq_("This is a comment", p.childs[0].text)
+        eq_("CommentLine", p.childs[0].__class__.__name__)
 
-        self.assertEqual("which is continued on @thisisnotag", p.childs[1].text)
-        self.assertEqual("CommentLine", p.childs[1].__class__.__name__)
+        eq_("which is continued on @thisisnotag", p.childs[1].text)
+        eq_("CommentLine", p.childs[1].__class__.__name__)
 
-        self.assertEqual("- Task one", p.childs[2].text)
-        self.assertEqual("Task", p.childs[2].__class__.__name__)
+        eq_("- Task one", p.childs[2].text)
+        eq_("Task", p.childs[2].__class__.__name__)
 
-        self.assertEqual("- Task two", p.childs[3].text)
-        self.assertEqual("Task", p.childs[2].__class__.__name__)
+        eq_("- Task two", p.childs[3].text)
+        eq_("Task", p.childs[2].__class__.__name__)
 
         t = p.childs[2]
-        self.assertEqual("- Task one", t.text)
-        self.assertEqual("Task", t.__class__.__name__)
-        self.assertEqual(1, len(t.childs))
+        eq_("- Task one", t.text)
+        eq_("Task", t.__class__.__name__)
+        eq_(1, len(t.childs))
 
-        self.assertEqual("And a comment for Task one", t.childs[0].text)
-        self.assertEqual("CommentLine", t.childs[0].__class__.__name__)
+        eq_("And a comment for Task one", t.childs[0].text)
+        eq_("CommentLine", t.childs[0].__class__.__name__)
 
 class TestParsingWithEmptyLines(TestParsingSimple):
     text = \
@@ -129,19 +131,19 @@ class TestParsingWithTags(TestParsingSimple):
 
     def test_tags(self):
         p = self.tpf.childs[0]
-        self.assertEqual(["@btag", "@atag", "@due"], p.tags.keys())
-        self.assertEqual(["@btag", "@atag", "@due"],
+        eq_(["@btag", "@atag", "@due"], p.tags.keys())
+        eq_(["@btag", "@atag", "@due"],
             [t.name for t in p.tags.values()]
         )
-        self.assertEqual([None, None, "2011-09-13"],
+        eq_([None, None, "2011-09-13"],
             [t.value for t in p.tags.values()]
         )
 
-        self.assertEqual(0, len(p.childs[0].tags))
-        self.assertEqual(0, len(p.childs[1].tags))
+        eq_(0, len(p.childs[0].tags))
+        eq_(0, len(p.childs[1].tags))
 
-        self.assertEqual(1, len(p.childs[2].tags))
-        self.assertEqual(1, len(p.childs[3].tags))
+        eq_(1, len(p.childs[2].tags))
+        eq_(1, len(p.childs[3].tags))
 # End: Parsing Tests  }}}
 # Access Elements by Line Numbers  {{{
 class TestAccessByLineNumbers(_ReadOnlyTPFBaseTest):
@@ -158,24 +160,94 @@ class TestAccessByLineNumbers(_ReadOnlyTPFBaseTest):
 """
 
     def test_project(self):
-        self.assertEqual("One Project:", self.tpf.at_line(1).text)
+        eq_("One Project:", self.tpf.at_line(1).text)
 
     def test_subproject(self):
-        self.assertEqual("A subproject:", self.tpf.at_line(7).text)
+        eq_("A subproject:", self.tpf.at_line(7).text)
 
     def test_task(self):
-        self.assertEqual("- And one more task", self.tpf.at_line(9).text)
+        eq_("- And one more task", self.tpf.at_line(9).text)
 
     def test_comment_1(self):
-        self.assertEqual("A comment", self.tpf.at_line(2).text)
+        eq_("A comment", self.tpf.at_line(2).text)
     def test_comment_2(self):
-        self.assertEqual("Another", self.tpf.at_line(3).text)
+        eq_("Another", self.tpf.at_line(3).text)
     def test_comment_3(self):
-        self.assertEqual("This is some written text", self.tpf.at_line(8).text)
+        eq_("This is some written text", self.tpf.at_line(8).text)
 
+    @raises(IndexError)
+    def test_access_out_of_bounds_negativ(self):
+        self.tpf.at_line(-1)
 
+    @raises(IndexError)
+    def test_access_out_of_bounds_zero(self):
+        self.tpf.at_line(0)
+
+    def test_access_out_of_bounds_too_high_returns_None(self):
+        eq_(None, self.tpf.at_line(10))
 
 # End: Access Element by Line Numbers }}}
+# Access Elements by Text {{{
+class TestAccessByText(_ReadOnlyTPFBaseTest):
+    text = \
+"""One Project: @atag
+	A comment @notag
+	Another
+	- A Task @anothertag @atag
+
+	- Another @andanother
+	A subproject: @btag
+			This is some written text
+		- And one more task @done
+Another Project: @ctags
+	- Year!
+"""
+
+    def test_project(self):
+        p = self.tpf['Another Project:']
+        ok_('@ctags' in p.tags)
+        eq_(1, len(p.childs))
+        eq_(10, p.lineno)
+
+    def test_subproject(self):
+        sp = self.tpf['A subproject:']
+        ok_('@btag' in sp.tags)
+        eq_(2, len(sp.childs))
+        eq_(7, sp.lineno)
+
+    def test_task(self):
+        t = self.tpf['- And one more task']
+        ok_('@done' in t.tags)
+        eq_(0, len(t.childs))
+        eq_(9, t.lineno)
+
+    def test_comment_1(self):
+        c = self.tpf['A comment @notag']
+        eq_(0, len(c.childs))
+        eq_(2, c.lineno)
+    def test_comment_2(self):
+        c = self.tpf['Another']
+        eq_(0, len(c.childs))
+        eq_(3, c.lineno)
+    def test_comment_3(self):
+        c = self.tpf['This is some written text']
+        eq_(0, len(c.childs))
+        eq_(8, c.lineno)
+
+    def test_access_in_subprojects(self):
+        p = self.tpf['One Project:']
+        eq_(p['- Another'], self.tpf['- Another'])
+
+    @raises(KeyError)
+    def test_access_stays_in_subprojects(self):
+        self.tpf['One Project:']['- Year!']
+
+    @raises(KeyError)
+    def test_access_to_not_existing(self):
+        self.tpf['This does not exist!']
+
+# End: Access Element by Text }}}
+
 # Timeline Tests  {{{
 class _CreateTimelineBase(unittest.TestCase):
     def setUp(self):
@@ -183,7 +255,7 @@ class _CreateTimelineBase(unittest.TestCase):
         self.timeline = extract_timeline(self.tpf, dt.date(2011, 04, 01))
 
     def runTest(self):
-        self.assertEqual(self.wanted, str(self.timeline))
+        eq_(self.wanted, str(self.timeline))
 
 class TestTimeline_NoDueItemsInTodoFile(_CreateTimelineBase):
     text = "- This one has no due date @home"
@@ -262,7 +334,7 @@ Today:
 class _ReorderingOfTagsBase(_TPFBaseTest):
     def runTest(self):
         reorder_tags(self.tpf)
-        self.assertEqual(self.wanted, str(self.tpf))
+        eq_(self.wanted, str(self.tpf))
 
 class TestTagReordering_simpleAlphabetical(_ReorderingOfTagsBase):
     text = "- was the dishes @beta @House @z\n"

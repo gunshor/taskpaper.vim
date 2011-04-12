@@ -52,6 +52,20 @@ class TextItem(object):
     def _extract_tags(self):
         self.text, self.tags = _extract_tags(self.text)
 
+    def deep_iterate(self):
+        """Iterate over all children, including their children"""
+        yield self
+        for c in self.childs:
+            for sc in c.deep_iterate():
+                yield sc
+    __iter__ = deep_iterate
+
+    def flat_iterate(self):
+        """Only iterate over self and the children"""
+        yield self
+        for c in self.childs:
+            yield c
+
     @property
     def text_with_tags(self):
         s = self.text or ""
@@ -59,6 +73,11 @@ class TextItem(object):
             s += " " + ' '.join(str(t) for t in self.tags.values())
         s += '\n'
         return s
+
+    def __getitem__(self, text):
+        for c in self:
+            if c.text == text: return c
+        raise KeyError("No child with text %r!" % text)
 
     def __str__(self):
         s = "" if not self.indent else "\t" * self.indent
@@ -73,12 +92,14 @@ class TextItem(object):
         return s
 
 
-class TaskPaperFile(object):
+class TaskPaperFile(TextItem):
     __INDENT = re.compile("^(\t*)(.*)")
 
     def __init__(self, text):
         self.childs = []
         self.tags = {}
+        self.text = None
+        self.lineno = None
 
         le = None
         for lidx,line in enumerate(text.splitlines()):
@@ -107,18 +128,11 @@ class TaskPaperFile(object):
         return ''.join(str(c) for c in self.childs)
 
     def at_line(self, lineno):
-        def _recurse(p):
-            if p.lineno == lineno:
-                return p
+        if lineno <= 0:
+            raise IndexError("Line numbers start at 1!")
 
-            for c in p.childs:
-                k = _recurse(c)
-                if k is not None: return k
-
-        self.lineno = None
-        self.text =""
-        return _recurse(self)
-
+        for c in self:
+            if c.lineno == lineno: return c
 
 class Project(TextItem):
     def __init__(self, *args):
@@ -157,7 +171,7 @@ def extract_timeline(tpf, gtoday = None):
     today_str = date2str(today)
 
     projects = {}
-    def _recurse(o):
+    for o in tpf:
         try:
             if "@due" in o.tags and not '@done' in o.tags:
                 dd = o.tags["@due"].value.split()[0]
@@ -191,27 +205,17 @@ def extract_timeline(tpf, gtoday = None):
                 raise RuntimeError("%s\n\nError in todo file in line %i: %s!" %
                         (str(e), o.lineno, o.text))
 
-        for c in o.childs:
-            _recurse(c)
-
-    _recurse(tpf)
-
     outstr = '\n'.join(str(c) for c in sorted(tl.childs, key=lambda p: p.due))
     outstr += '\n\n vim:ro\n'
 
     return outstr
 
 def reorder_tags(tpf):
-    def _recurse(obj):
+    for obj in tpf:
         tag_order = sorted([t.name for t in obj.tags.values() if not t.value]) + \
                     sorted([t.name for t in obj.tags.values() if t.value])
         for tn in tag_order:
             obj.tags[tn] = obj.tags.pop(tn)
-
-        for c in obj.childs:
-            _recurse(c)
-
-    _recurse(tpf)
 
 def filter_taskpaper(cmdline):
     f = TaskPaperFile('\n'.join(vim.current.buffer))
