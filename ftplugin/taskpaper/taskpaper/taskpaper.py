@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import re
+from collections import defauldict
+import sys
+
 try: import vim
 except ImportError: pass
-
-import re
-import sys
 
 from config import *
 
@@ -209,6 +210,35 @@ def extract_timeline(tpf, gtoday = None):
     outstr += '\n\n vim:ro\n'
 
     return outstr
+
+def log_finished(tpf, logbook, gtoday = None):
+    new_tpf = TaskPaperFile(str(tpf))
+    new_logbook = TaskPaperFile(str(logbook))
+
+    today = dt.date.today() if not gtoday else gtoday
+
+    # Important, we remove elements from the TPF, so we have to make a lists of
+    # them first, otherwise the tree changes while traversing
+    done_items = defauldict(list)
+    for e in list(new_tpf):
+        if isinstance(e, (Task, Project)) and '@done' in e.tags:
+            e.delete() # TODO: unittests for delete!
+            done_date = str2date(e.tags['@done'].value) if \
+                    e.tags['done'].value else today
+            done_items[done_date].append(e)
+
+    for date in sorted(done_items.keys(), reverse=True):
+        proj_name = date.strftime("%A, %d. %B %Y:")
+        proj = None
+        try:
+            proj = new_logbook[proj_name]
+        except KeyError:
+            proj = Project(0, proj_name, None, 1)
+            new_logbook.childs.insert(0, proj)
+
+        # TODO: hier gehts weiter
+
+
 
 def reorder_tags(tpf):
     for obj in tpf:

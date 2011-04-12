@@ -326,6 +326,42 @@ Today:
  vim:ro\n"""
 
 # End: Timeline Tests  }}}
+# Logbook Tests  {{{
+class _CreateLogbookBase(_TPFBaseTest):
+    def setUp(self):
+        _TPFBaseTest.setUp(self)
+        self.tpf = TaskPaperFile(self.text)
+        self.logbook = TaskPaperFile(self.logbook_text)
+
+    def runTest(self):
+        new_tpf, new_logbook = log_finished(self.tpf, self.logbook)
+        eq_(self.wanted, str(new_tpf))
+        eq_(self.wanted_logbook, str(new_logbook))
+# End: Logbook Tests  }}}
+
+class TestLogBook_SimpleExample_NoDate(_CreateLogbookBase):
+    text = \
+"""My Project:
+	- This ain't
+	- This task is over @done @home
+	- This ain't either
+"""
+    wanted = \
+"""My Project:
+	- This ain't
+	- This ain't either
+"""
+    logbook_text = \
+"""Without Date:
+	- This was already done @home @what
+"""
+    wanted_logbook = \
+"""Without Date:
+	- This was already done @home @what
+	- My Project • This task is over @done @home
+"""
+
+
 
 #######################################
 # Tests on Complete File (Read Write) #
