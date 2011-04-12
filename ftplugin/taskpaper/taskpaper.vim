@@ -28,7 +28,7 @@ map <buffer> <silent> <Leader>td :ToggleDone<cr>
 map <buffer> <silent> <Leader>tf :Filter 
 map <buffer> <silent> <C-a> :AddToDate<cr>
 map <buffer> <silent> <C-x> :SubFromDate<cr>
-
+2
 augroup TaskpaperBufWritePre
   au!
   au BufWritePre *.taskpaper silent py run_presave()
