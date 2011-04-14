@@ -60,13 +60,16 @@ class _TPFBaseTest(unittest.TestCase):
 
     def setUp(self):
         self.tpf = TaskPaperFile(self.text)
-class _ReadOnlyTPFBaseTest(_TPFBaseTest):
-    def test_text_does_not_change(self):
-        eq_(self.text, str(self.tpf))
-# End: TaskPaper File Tests Base Classes  }}}
-# Parsing Tests  {{{
+class _KeepContentIntactTPFBaseTest(_TPFBaseTest):
+    wanted = None
 
-class TestParsingSimple(_ReadOnlyTPFBaseTest):
+    def test_text_does_not_change(self):
+        wanted = self.wanted or self.text
+        eq_(wanted, str(self.tpf))
+# End: TaskPaper File Tests Base Classes  }}}
+
+# Parsing Tests  {{{
+class TestParsingSimple(_KeepContentIntactTPFBaseTest):
     text = \
 """One project:
 	This is a comment
@@ -117,6 +120,24 @@ class TestParsingWithEmptyLines(TestParsingSimple):
 
 """
 
+
+class TestParsingWithTrainlingSpaceInProject(TestParsingSimple):
+    text = \
+"One project: \n" + \
+"""	This is a comment
+	which is continued on @thisisnotag
+	- Task one
+		And a comment for Task one
+	- Task two
+"""
+    wanted = "One project:\n" + \
+"""	This is a comment
+	which is continued on @thisisnotag
+	- Task one
+		And a comment for Task one
+	- Task two
+"""
+
 class TestParsingWithTags(TestParsingSimple):
     text = \
 """One project: @btag @atag @due(2011-09-13)
@@ -146,7 +167,7 @@ class TestParsingWithTags(TestParsingSimple):
         eq_(1, len(p.childs[3].tags))
 # End: Parsing Tests  }}}
 # Access Elements by Line Numbers  {{{
-class TestAccessByLineNumbers(_ReadOnlyTPFBaseTest):
+class TestAccessByLineNumbers(_KeepContentIntactTPFBaseTest):
     text = \
 """One Project:
 	A comment
@@ -188,7 +209,7 @@ class TestAccessByLineNumbers(_ReadOnlyTPFBaseTest):
 
 # End: Access Element by Line Numbers }}}
 # Access Elements by Text {{{
-class TestAccessByText(_ReadOnlyTPFBaseTest):
+class TestAccessByText(_KeepContentIntactTPFBaseTest):
     text = \
 """One Project: @atag
 	A comment @notag
@@ -511,8 +532,8 @@ My Other Project:
 
 class TestLogBook_RealLifeExample(_CreateLogbookBase):
     text = \
-"""Privat • Verschiedenes:
-	- Sabine Danke für Ihren Pulli sagen @mail @done(2011-04-08) @due(2011-04-08)
+"Privat • Verschiedenes: \n" + \
+"""	- Sabine Danke für Ihren Pulli sagen @mail @done(2011-04-08) @due(2011-04-08)
 """
     wanted = \
 """Privat • Verschiedenes:
@@ -520,10 +541,8 @@ class TestLogBook_RealLifeExample(_CreateLogbookBase):
     logbook_text = ""
     wanted_logbook = \
 """Friday, 08. April 2011:
-	- • Verschiedenes • Sabine Danke für Ihren Pulli sagen @mail @done(2011-04-08) @due(2011-04-08)
+	- Privat • Verschiedenes • Sabine Danke für Ihren Pulli sagen @mail @done(2011-04-08) @due(2011-04-08)
 """
-
-# TODO: remove spaces at end of line!
 # End: Logbook Tests  }}}
 
 

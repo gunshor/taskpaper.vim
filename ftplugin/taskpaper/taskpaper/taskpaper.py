@@ -128,7 +128,8 @@ class TaskPaperFile(TextItem):
             line_type = CommentLine
             if content[0] == '-':
                 line_type = Task
-            elif _extract_tags(content)[0][-1] == ':':
+            elif _extract_tags(content)[0].strip()[-1] == ':':
+                content = content.strip()
                 line_type = Project
 
             to = line_type(indent, content, le, lidx + 1)
