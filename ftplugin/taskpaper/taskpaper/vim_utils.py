@@ -15,6 +15,7 @@ try: import vim
 except ImportError: pass
 
 from taskpaper import *
+from config import LOGBOOK_FILENAME
 
 _DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 _NUM = re.compile(r"\d+")
@@ -66,3 +67,15 @@ def toggle_done(last_line):
             _toggle_done(c)
 
     vim.current.buffer[:] = str(tpf).splitlines()
+
+
+def log_current_dones():
+    old_logbook = TaskPaperFile("") if not os.path.exists(LOGBOOK_FILENAME) \
+            else TaskPaperFile(open(LOGBOOK_FILENAME).read())
+    tpf, logbook = log_finished(
+        TaskPaperFile('\n'.join(vim.current.buffer)),
+        old_logbook,
+    )
+    vim.current.buffer[:] = str(tpf).splitlines()
+    open(LOGBOOK_FILENAME, "w").write(str(logbook))
+

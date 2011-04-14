@@ -483,7 +483,7 @@ Wednesday, 11. May 2011:
 	- My Project • This is a subproject • All @done(2011-05-11)
 """
 
-class TestLogBook_SubProjectLogging_SPIsDone(_CreateLogbookBase):
+class TestLogBook_LogWithComment(_CreateLogbookBase):
     text = \
 """My Project:
 	- This is not done
@@ -509,6 +509,21 @@ My Other Project:
 		And it has a stupid comment without a tag @done(2011-05-12)
 """
 
+class TestLogBook_RealLifeExample(_CreateLogbookBase):
+    text = \
+"""Privat • Verschiedenes:
+	- Sabine Danke für Ihren Pulli sagen @mail @done(2011-04-08) @due(2011-04-08)
+"""
+    wanted = \
+"""Privat • Verschiedenes:
+"""
+    logbook_text = ""
+    wanted_logbook = \
+"""Friday, 08. April 2011:
+	- • Verschiedenes • Sabine Danke für Ihren Pulli sagen @mail @done(2011-04-08) @due(2011-04-08)
+"""
+
+# TODO: remove spaces at end of line!
 # End: Logbook Tests  }}}
 
 
