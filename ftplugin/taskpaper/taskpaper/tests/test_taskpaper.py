@@ -482,7 +482,32 @@ Wednesday, 11. May 2011:
 		- are
 	- My Project • This is a subproject • All @done(2011-05-11)
 """
-# TODO: logging items with notes
+
+class TestLogBook_SubProjectLogging_SPIsDone(_CreateLogbookBase):
+    text = \
+"""My Project:
+	- This is not done
+	- But this is @done(2011-05-12)
+		And it has a stupid comment without a tag @done(2011-05-12)
+	- This is also not done
+
+My Other Project:
+	- Nothing is done for this
+"""
+    wanted = \
+"""My Project:
+	- This is not done
+	- This is also not done
+
+My Other Project:
+	- Nothing is done for this
+"""
+    logbook_text = ""
+    wanted_logbook = \
+"""Thursday, 12. May 2011:
+	- My Project • But this is @done(2011-05-12)
+		And it has a stupid comment without a tag @done(2011-05-12)
+"""
 
 # End: Logbook Tests  }}}
 
