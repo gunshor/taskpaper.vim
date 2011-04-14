@@ -44,6 +44,7 @@ command -nargs=* Filter py filter_taskpaper(r'<args>')
 command -count AddToDate py add_to_date(<count>, 1)
 command -count SubFromDate py add_to_date(<count>, -1)
 command -range ToggleDone py toggle_done(<count>)
+command LogDone py log_current_dones()
 
 " Set up mappings
 noremap <unique> <script> <Plug>ToggleDone       :call <SID>ToggleDone()<CR>

@@ -70,6 +70,8 @@ def toggle_done(last_line):
 
 
 def log_current_dones():
+    cursor = vim.current.window.cursor
+
     old_logbook = TaskPaperFile("") if not os.path.exists(LOGBOOK_FILENAME) \
             else TaskPaperFile(open(LOGBOOK_FILENAME).read())
     tpf, logbook = log_finished(
@@ -77,5 +79,8 @@ def log_current_dones():
         old_logbook,
     )
     vim.current.buffer[:] = str(tpf).splitlines()
+    vim.current.window.cursor = cursor
+
     open(LOGBOOK_FILENAME, "w").write(str(logbook))
+
 
