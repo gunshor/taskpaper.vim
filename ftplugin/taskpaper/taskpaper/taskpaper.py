@@ -186,7 +186,6 @@ class Tag(object):
                 (self.name, self.value)
 
 import datetime as dt
-import dateutil
 from copy import copy
 
 str2date = lambda sdate: dt.date(*map(int,sdate.split('-')))
