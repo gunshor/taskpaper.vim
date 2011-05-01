@@ -236,7 +236,10 @@ def extract_timeline(tpf, gtoday = None):
 
     return outstr
 
-def log_finished(tpf, logbook, gtoday = None):
+def log_finished(tpf, gtoday = None):
+    logbook = TaskPaperFile("") if not os.path.exists(LOGBOOK_FILENAME) \
+            else TaskPaperFile(open(LOGBOOK_FILENAME).read())
+
     new_tpf = TaskPaperFile(str(tpf))
     new_logbook = TaskPaperFile(str(logbook))
 
@@ -283,7 +286,11 @@ def log_finished(tpf, logbook, gtoday = None):
     )
     for c in new_logbook: c._trailing_empty_lines = 0
 
-    return new_tpf, TaskPaperFile('\n'.join(str(c) for c in new_logbook.childs))
+    open(LOGBOOK_FILENAME, "w").write(
+        str(TaskPaperFile('\n'.join(str(c) for c in new_logbook.childs)))
+    )
+
+    return new_tpf
 
 
 def reorder_tags(tpf):
@@ -339,6 +346,8 @@ if __name__ == '__main__':
         parser = OptionParser("%prog [options] <input file>")
         parser.add_option("-t", "--timeline", action="store_true",
                 default=False, help="create a timeline", metavar="FILE")
+        parser.add_option("-l", "--logbook", action="store_true",
+                default=False, help="update the logbook with done items", metavar="FILE")
 
         o, a = parser.parse_args()
 
@@ -350,8 +359,15 @@ if __name__ == '__main__':
     def main():
         o, a = parse_args()
 
+        tpf = TaskPaperFile(open(a[0]).read())
+
+        if o.logbook:
+            tpf = log_finished(tpf)
+
         if o.timeline:
-            tpf = TaskPaperFile(open(a[0]).read())
-            sys.stdout.write(extract_timeline(tpf))
+            open(TIMELINE_FILENAME, "w").write(extract_timeline(tpf))
+
+        open(a[0], "w").write(str(tpf))
 
     main()
+
