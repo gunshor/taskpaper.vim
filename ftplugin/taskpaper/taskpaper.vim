@@ -8,6 +8,9 @@
 "add '@' to keyword character set so that we can complete contexts as keywords
 setlocal iskeyword+=@-@
 
+" Ignore case when searching
+setlocal smartcase
+
 "set default folding: by project (syntax), open (up to 99 levels), disabled 
 setlocal foldmethod=syntax
 setlocal foldlevel=99
@@ -19,16 +22,16 @@ setlocal nowrap
 " Add formatoptions
 setlocal formatoptions+=o
 setlocal formatoptions+=t
-setlocal comments=b:-,b:•
+setlocal comments=b:-,b:•,n:[_]
 
 " Filtering
 setlocal errorformat=%l:%m
 
-map <buffer> <silent> <Leader>td :ToggleDone<cr>
-map <buffer> <silent> <Leader>tf :Filter 
+map <buffer> <silent> T :ToggleDone<cr>
+" map <buffer> <silent> F :Filter 
 map <buffer> <silent> <C-a> :AddToDate<cr>
 map <buffer> <silent> <C-x> :SubFromDate<cr>
-2
+
 augroup TaskpaperBufWritePre
   au!
   au BufWritePre *.taskpaper silent py run_presave()
