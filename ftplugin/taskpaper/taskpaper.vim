@@ -9,6 +9,7 @@
 setlocal iskeyword+=@-@
 
 " Ignore case when searching
+setlocal ignorecase
 setlocal smartcase
 
 "set default folding: by project (syntax), open (up to 99 levels), disabled 
@@ -22,7 +23,7 @@ setlocal nowrap
 " Add formatoptions
 setlocal formatoptions+=o
 setlocal formatoptions+=t
-setlocal comments=b:-,b:•,n:[_]
+setlocal comments=b:•,n:[_]
 
 " Filtering
 setlocal errorformat=%l:%m
