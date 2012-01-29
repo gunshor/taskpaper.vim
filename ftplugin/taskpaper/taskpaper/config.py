@@ -6,7 +6,7 @@ import os.path as p
 
 HOME = os.getenv("HOME")
 
-INBOX_FILENAME = p.join(HOME, "SimpleText", "01_inbox.taskpaper")
-TODO_FILENAME = p.join(HOME, "SimpleText", "02_todo.taskpaper")
-TIMELINE_FILENAME = p.join(HOME, "SimpleText", "10_timeline.taskpaper")
-LOGBOOK_FILENAME = p.join(HOME, "SimpleText", "40_logbook.taskpaper")
+INBOX_FILENAME = p.join(HOME, "Dropbox", "Tasks", "01_inbox.taskpaper")
+TODO_FILENAME = p.join(HOME, "Dropbox", "Tasks", "02_todo.taskpaper")
+TIMELINE_FILENAME = p.join(HOME, "Dropbox", "Tasks", "10_timeline.taskpaper")
+LOGBOOK_FILENAME = p.join(HOME, "Dropbox", "Tasks", "40_logbook.taskpaper")
