@@ -12,7 +12,7 @@ from config import *
 
 from _ordered_dict import OrderedDict
 
-__TAGS = re.compile(r"\s*(@\w+)(\([^)]*\))?\s*")
+_TAGS = re.compile(r"\s*(@\w+)(\([^)]*\))?\s*")
 def _extract_tags(text):
     tags = OrderedDict()
 
@@ -22,7 +22,7 @@ def _extract_tags(text):
         if value: value = value[1:-1].strip()
         tags[name] = Tag(name, value)
         return ""
-    new_text = __TAGS.subn(_found, text)[0]
+    new_text = _TAGS.subn(_found, text)[0]
 
     return new_text, tags
 
@@ -108,9 +108,14 @@ class TextItem(object):
         s += '\n' * self._trailing_empty_lines
         return s
 
+    def __lt__(self, o):
+        return self.lineno < o.lineno
+    def __le__(self, o):
+        return self.lineno <= o.lineno
 
 class TaskPaperFile(TextItem):
-    __INDENT = re.compile("^(\t*)(.*)")
+    __INDENT = re.compile(r"^(\t*)(.*)")
+    __ORDER = re.compile(r"o:(\S+)")
 
     def __init__(self, text):
         TextItem.__init__(self, None, None, None, None)
@@ -139,6 +144,47 @@ class TaskPaperFile(TextItem):
                 to.parent = self
 
             le = to
+
+    def filter(self, cmdline):
+        m = self.__ORDER.search(cmdline)
+        key = None
+        reverse = False
+
+        if m is not None:
+            cmdline = cmdline[:m.span(0)[0]] + cmdline[m.span(0)[1]:]
+            ocmd = m.group(1)
+            if ocmd[0] in '+-':
+                if ocmd[0] == '-':
+                    reverse = True
+                ocmd = ocmd[1:]
+            if ocmd[0] != '@':
+                ocmd = '@' + ocmd
+            key = lambda a: a.tags[ocmd].value if (ocmd in a.tags) else None
+
+        def _eval(o):
+            def _sub(m):
+                t = m.group(1)
+                if t in o.tags:
+                    if o.tags[t].value is not None:
+                        return " %r " % o.tags[t].value
+                    return " True "
+                return " False "
+
+            eval_str = _TAGS.sub(_sub, cmdline).strip()
+            return eval(eval_str) if eval_str else False
+
+        matches = set()
+        def _recurse(obj):
+            if _eval(obj):
+                matches.add(obj)
+            else:
+                for c in obj.childs:
+                    _recurse(c)
+
+        _recurse(self)
+
+        return sorted(matches, key=key, reverse=reverse)
+
 
     def at_line(self, lineno):
         if lineno <= 0:
@@ -180,6 +226,13 @@ class Tag(object):
     def __init__(self, name, value = None):
         self.name = name
         self.value = value
+        if value is not None:
+            for t in (int, float):
+                try:
+                    self.value = t(value)
+                    break
+                except ValueError:
+                    pass
 
     def __str__(self):
         return self.name if not self.value else "%s(%s)" % \
@@ -300,33 +353,48 @@ def reorder_tags(tpf):
         for tn in tag_order:
             obj.tags[tn] = obj.tags.pop(tn)
 
+
+def filter_jump(fn):
+    line = int(vim.current.line.split('|', 2)[1])
+    for idx,win in enumerate(vim.windows, 1):
+        vim.command("%iwincmd w" % idx)
+        if vim.eval("expand('%')").startswith(fn):
+            break
+
+    vim.current.window.cursor = line, 0
+    vim.command('normal ^')
+
+
 def filter_taskpaper(cmdline):
+    all_windows = [ w for w in vim.windows ]
+    cwind = all_windows.index(vim.current.window)
+
+    def _close_all():
+        for idx,win in enumerate(vim.windows, 1):
+            vim.command("%iwincmd w" % idx)
+            if "nofile" in vim.eval("&buftype"):
+                vim.command(":bwipeout")
+                return _close_all()
+    _close_all()
+    vim.command("%iwincmd w" % cwind)
+
     f = TaskPaperFile('\n'.join(vim.current.buffer))
-
-    def _eval(o):
-        def _sub(m):
-            t = m.group(1)
-            if t in o.tags: return " True "
-            return " False "
-
-        eval_str = __TAGS.sub(_sub, cmdline).strip()
-        return eval(eval_str) if eval_str else False
-
-    matches = set()
     cf = vim.eval("expand('%')")
-    def _recurse(obj):
-        if _eval(obj):
-            matches.add("%s:%i:%s" % (cf, obj.lineno, obj.text_with_tags.strip()))
-        else:
-            for c in obj.childs:
-                _recurse(c)
 
-    _recurse(f)
+    matches = f.filter(cmdline)
 
-    vim.command('lgetexpr "%s"' %
-            ('\\n'.join(f.replace('"', r'\"') for f in sorted(matches)))
-    )
-    vim.command("lwindow")
+    # new vim buffer
+    cfb = os.path.splitext(cf)[0]
+    vim.command("rightbelow new")
+    vim.command("set modifiable")
+    vim.current.buffer[:] = [ "%s|%4i|%s" % (cfb, o.lineno, o.text_with_tags.strip()) for o in matches ]
+
+    vim.command("resize 15")
+    vim.command("set winfixheight")
+    vim.command("set buftype=nofile")
+    vim.command("set ft=qf")
+    vim.command("set nomodifiable")
+    vim.command("map <cr> :py filter_jump('%s')<cr>" % cf)
 
 def run_presave():
     tpf = TaskPaperFile('\n'.join(vim.current.buffer))
