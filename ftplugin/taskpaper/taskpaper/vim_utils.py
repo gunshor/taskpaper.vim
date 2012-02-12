@@ -68,11 +68,67 @@ def toggle_done(last_line):
 
     vim.current.buffer[:] = str(tpf).splitlines()
 
-
 def log_current_dones():
     cursor = vim.current.window.cursor
-    tpf = log_finished(TaskPaperFile('\n'.join(vim.current.buffer)))
+    tpf, new_logbook = log_finished(TaskPaperFile('\n'.join(vim.current.buffer)))
 
     vim.current.buffer[:] = str(tpf).splitlines()
-    vim.current.window.cursor = cursor
+    vim.current.window.cursor = min(cursor[0], len(vim.current.buffer), cursor[1]
+
+    open(LOGBOOK_FILENAME, "w").write(
+        str(TaskPaperFile('\n'.join(str(c) for c in new_logbook.childs)))
+    )
+
+def filter_jump(fn):
+    line = int(vim.current.line.split('|', 2)[1])
+    for idx,win in enumerate(vim.windows, 1):
+        vim.command("%iwincmd w" % idx)
+        if vim.eval("expand('%')").startswith(fn):
+            break
+
+    vim.current.window.cursor = line, 0
+    vim.command('normal ^')
+
+
+def filter_taskpaper(cmdline):
+    all_windows = [ w for w in vim.windows ]
+    cwind = all_windows.index(vim.current.window)
+
+    def _close_all():
+        for idx,win in enumerate(vim.windows, 1):
+            vim.command("%iwincmd w" % idx)
+            if "nofile" in vim.eval("&buftype"):
+                vim.command(":bwipeout")
+                return _close_all()
+    _close_all()
+    vim.command("%iwincmd w" % cwind)
+
+    f = TaskPaperFile('\n'.join(vim.current.buffer))
+    cf = vim.eval("expand('%')")
+
+    matches = f.filter(cmdline)
+
+    # new vim buffer
+    cfb = os.path.splitext(cf)[0]
+    vim.command("rightbelow new")
+    vim.current.buffer[:] = [ "%s|%4i|%s" % (cfb, o.lineno, o.text_with_tags.strip()) for o in matches ]
+
+    vim.command("resize 15")
+    vim.command("setlocal winfixheight")
+    vim.command("setlocal buftype=nofile")
+    vim.command("setlocal ft=qf")
+    vim.command("setlocal nomodifiable")
+    vim.command("map <buffer> <cr> :py filter_jump('%s')<cr>" % cf)
+
+def run_presave():
+    tpf = TaskPaperFile('\n'.join(vim.current.buffer))
+
+    reorder_tags(tpf)
+
+    if os.path.basename(vim.current.buffer.name) == os.path.basename(TODO_FILENAME):
+        open(TIMELINE_FILENAME, "w").write(extract_timeline(tpf))
+
+    vim.current.buffer[:] = str(tpf).splitlines()
+
+
 

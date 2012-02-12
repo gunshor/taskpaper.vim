@@ -5,9 +5,6 @@ import re
 from collections import defaultdict
 import sys
 
-try: import vim
-except ImportError: pass
-
 from config import *
 
 from _ordered_dict import OrderedDict
@@ -289,9 +286,10 @@ def extract_timeline(tpf, gtoday = None):
 
     return outstr
 
-def log_finished(tpf, gtoday = None):
-    logbook = TaskPaperFile("") if not os.path.exists(LOGBOOK_FILENAME) \
-            else TaskPaperFile(open(LOGBOOK_FILENAME).read())
+def log_finished(tpf, logbook = None, gtoday = None):
+    if logbook is None:
+        logbook = TaskPaperFile("") if not os.path.exists(LOGBOOK_FILENAME) \
+                else TaskPaperFile(open(LOGBOOK_FILENAME).read())
 
     new_tpf = TaskPaperFile(str(tpf))
     new_logbook = TaskPaperFile(str(logbook))
@@ -339,12 +337,7 @@ def log_finished(tpf, gtoday = None):
     )
     for c in new_logbook: c._trailing_empty_lines = 0
 
-    open(LOGBOOK_FILENAME, "w").write(
-        str(TaskPaperFile('\n'.join(str(c) for c in new_logbook.childs)))
-    )
-
-    return new_tpf
-
+    return new_tpf, TaskPaperFile('\n'.join(str(c) for c in new_logbook.childs))
 
 def reorder_tags(tpf):
     for obj in tpf:
@@ -352,58 +345,6 @@ def reorder_tags(tpf):
                     sorted([t.name for t in obj.tags.values() if t.value])
         for tn in tag_order:
             obj.tags[tn] = obj.tags.pop(tn)
-
-
-def filter_jump(fn):
-    line = int(vim.current.line.split('|', 2)[1])
-    for idx,win in enumerate(vim.windows, 1):
-        vim.command("%iwincmd w" % idx)
-        if vim.eval("expand('%')").startswith(fn):
-            break
-
-    vim.current.window.cursor = line, 0
-    vim.command('normal ^')
-
-
-def filter_taskpaper(cmdline):
-    all_windows = [ w for w in vim.windows ]
-    cwind = all_windows.index(vim.current.window)
-
-    def _close_all():
-        for idx,win in enumerate(vim.windows, 1):
-            vim.command("%iwincmd w" % idx)
-            if "nofile" in vim.eval("&buftype"):
-                vim.command(":bwipeout")
-                return _close_all()
-    _close_all()
-    vim.command("%iwincmd w" % cwind)
-
-    f = TaskPaperFile('\n'.join(vim.current.buffer))
-    cf = vim.eval("expand('%')")
-
-    matches = f.filter(cmdline)
-
-    # new vim buffer
-    cfb = os.path.splitext(cf)[0]
-    vim.command("rightbelow new")
-    vim.current.buffer[:] = [ "%s|%4i|%s" % (cfb, o.lineno, o.text_with_tags.strip()) for o in matches ]
-
-    vim.command("resize 15")
-    vim.command("setlocal winfixheight")
-    vim.command("setlocal buftype=nofile")
-    vim.command("setlocal ft=qf")
-    vim.command("setlocal nomodifiable")
-    vim.command("map <buffer> <cr> :py filter_jump('%s')<cr>" % cf)
-
-def run_presave():
-    tpf = TaskPaperFile('\n'.join(vim.current.buffer))
-
-    reorder_tags(tpf)
-
-    if os.path.basename(vim.current.buffer.name) == os.path.basename(TODO_FILENAME):
-        open(TIMELINE_FILENAME, "w").write(extract_timeline(tpf))
-
-    vim.current.buffer[:] = str(tpf).splitlines()
 
 
 if __name__ == '__main__':
