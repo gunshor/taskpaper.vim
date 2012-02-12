@@ -17,6 +17,15 @@ except ImportError: pass
 from taskpaper import *
 from config import LOGBOOK_FILENAME
 
+def _tpf_to_current_buffer(tpf):
+    cursor = vim.current.window.cursor
+
+    new_text = str(tpf).strip()
+    old_text = '\n'.join(vim.current.buffer[:])
+    if old_text != new_text:
+        vim.current.buffer[:] = new_text.splitlines()
+        vim.current.window.cursor = min(cursor[0], len(vim.current.buffer)), cursor[1]
+
 _DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 _NUM = re.compile(r"\d+")
 def add_to_date(days, multiplier):
@@ -66,14 +75,12 @@ def toggle_done(last_line):
         if isinstance(c, (Task, Project)):
             _toggle_done(c)
 
-    vim.current.buffer[:] = str(tpf).splitlines()
+    _tpf_to_current_buffer(tpf)
 
 def log_current_dones():
-    cursor = vim.current.window.cursor
     tpf, new_logbook = log_finished(TaskPaperFile('\n'.join(vim.current.buffer)))
 
-    vim.current.buffer[:] = str(tpf).splitlines()
-    vim.current.window.cursor = min(cursor[0], len(vim.current.buffer), cursor[1]
+    _tpf_to_current_buffer(tpf)
 
     open(LOGBOOK_FILENAME, "w").write(
         str(TaskPaperFile('\n'.join(str(c) for c in new_logbook.childs)))
@@ -128,7 +135,7 @@ def run_presave():
     if os.path.basename(vim.current.buffer.name) == os.path.basename(TODO_FILENAME):
         open(TIMELINE_FILENAME, "w").write(extract_timeline(tpf))
 
-    vim.current.buffer[:] = str(tpf).splitlines()
+    _tpf_to_current_buffer(tpf)
 
 
 
