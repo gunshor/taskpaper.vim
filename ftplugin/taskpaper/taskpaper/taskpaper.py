@@ -282,6 +282,7 @@ def extract_timeline(tpf, gtoday = None):
                         (str(e), o.lineno, o.text))
 
     outstr = '\n'.join(str(c) for c in sorted(tl.childs, key=lambda p: p.due))
+    outstr = re.sub(r"\n{3,100}", "\n\n", outstr, re.M)
     outstr += '\n\n vim:ro\n'
 
     return outstr
