@@ -386,22 +386,21 @@ def filter_taskpaper(cmdline):
     # new vim buffer
     cfb = os.path.splitext(cf)[0]
     vim.command("rightbelow new")
-    vim.command("set modifiable")
     vim.current.buffer[:] = [ "%s|%4i|%s" % (cfb, o.lineno, o.text_with_tags.strip()) for o in matches ]
 
     vim.command("resize 15")
-    vim.command("set winfixheight")
-    vim.command("set buftype=nofile")
-    vim.command("set ft=qf")
-    vim.command("set nomodifiable")
-    vim.command("map <cr> :py filter_jump('%s')<cr>" % cf)
+    vim.command("setlocal winfixheight")
+    vim.command("setlocal buftype=nofile")
+    vim.command("setlocal ft=qf")
+    vim.command("setlocal nomodifiable")
+    vim.command("map <buffer> <cr> :py filter_jump('%s')<cr>" % cf)
 
 def run_presave():
     tpf = TaskPaperFile('\n'.join(vim.current.buffer))
 
     reorder_tags(tpf)
 
-    if vim.current.buffer.name == TODO_FILENAME:
+    if os.path.basename(vim.current.buffer.name) == os.path.basename(TODO_FILENAME):
         open(TIMELINE_FILENAME, "w").write(extract_timeline(tpf))
 
     vim.current.buffer[:] = str(tpf).splitlines()

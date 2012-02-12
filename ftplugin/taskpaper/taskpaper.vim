@@ -29,7 +29,7 @@ setlocal comments=b:•,n:[_]
 setlocal errorformat=%l:%m
 
 map <buffer> <silent> T :ToggleDone<cr>
-" map <buffer> <silent> F :Filter 
+map <buffer> <silent> F :Filter 
 map <buffer> <silent> <C-a> :AddToDate<cr>
 map <buffer> <silent> <C-x> :SubFromDate<cr>
 
